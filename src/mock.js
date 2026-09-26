@@ -28,10 +28,13 @@ function priceRows(id, version) {
 
 export const mock = {
   versions: () => wait(V),
-  async entries({ type = '', q = '', page = 1, limit = 50, sort = 'name', favorites = [], custom = [], version }) {
+  async entries({ type = '', q = '', page = 1, limit = 50, sort = 'name', favorites = [], custom = [], manual = {}, version }) {
     const remote = match({ type, q }).map(e => {
       const { buy, sell } = priceRows(e.id, version)
-      return { ...e, minBuy: buy[0]?.price ?? null, maxSell: sell[0]?.price ?? null }
+      const m = manual[e.id]
+      const allBuy = m ? [...buy, ...(m.buy || [])] : buy
+      const allSell = m ? [...sell, ...(m.sell || [])] : sell
+      return summarize({ id: e.id, name: e.name, type: e.type, buy: allBuy, sell: allSell })
     })
     const own = custom
       .filter(e => (!type || e.type === type) && e.name.toLowerCase().includes(q.toLowerCase()))

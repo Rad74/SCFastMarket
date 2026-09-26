@@ -17,7 +17,7 @@ const get = async (path, params = {}) => {
 const backendApi = {
   versions: () => get('/versions'),
   // I prodotti personalizzati vivono solo nel browser: il backend non li conosce, quindi non li inoltriamo.
-  entries: ({ custom, ...p }) => get('/entries', { ...p, favorites: (p.favorites || []).join(',') }),
+  entries: ({ custom, manual, ...p }) => get('/entries', { ...p, favorites: (p.favorites || []).join(',') }),
   suggest: ({ custom, ...p }) => get('/suggest', p),
   prices: (id, p) => get(`/entries/${encodeURIComponent(id)}/prices`, p),
 }

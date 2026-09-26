@@ -22,12 +22,18 @@ async function loadVersion(version) {
 export const staticApi = {
   versions: () => fetch('/data/versions.json').then(r => r.json()),
 
-  async entries({ version, type = '', q = '', page = 1, limit = 50, sort = 'name', favorites = [], custom = [] }) {
+  async entries({ version, type = '', q = '', page = 1, limit = 50, sort = 'name', favorites = [], custom = [], manual = {} }) {
     const { entries, prices } = await loadVersion(version)
     const needle = q.trim().toLowerCase()
     const remote = entries
       .filter(e => (!type || e.type === type) && (!needle || e.name.toLowerCase().includes(needle)))
-      .map(e => ({ ...e, minBuy: prices[e.id]?.buy[0]?.price ?? null, maxSell: prices[e.id]?.sell[0]?.price ?? null }))
+      .map(e => {
+        const base = prices[e.id] || { buy: [], sell: [] }
+        const m = manual[e.id]
+        const buy = m ? [...base.buy, ...(m.buy || [])] : base.buy
+        const sell = m ? [...base.sell, ...(m.sell || [])] : base.sell
+        return summarize({ id: e.id, name: e.name, type: e.type, buy, sell })
+      })
     const own = custom
       .filter(e => (!type || e.type === type) && (!needle || e.name.toLowerCase().includes(needle)))
       .map(summarize)

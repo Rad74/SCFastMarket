@@ -4,6 +4,7 @@ import { state, TYPE_LABEL } from './state'
 import { api } from './api'
 import { favorites, toggleFavorite } from './favorites'
 import { customItems, addCustomItem, isCustom } from './custom-items'
+import { manualPrices } from './manual-prices'
 import { fmt } from './list-utils.js'
 import SearchBox from './components/SearchBox.vue'
 import PriceModal from './components/PriceModal.vue'
@@ -34,7 +35,7 @@ async function load() {
   try {
     const r = await api.entries({
       version: state.version, type: state.type, q: state.q, page: state.page,
-      limit: LIMIT, sort: state.sort, favorites: [...favorites], custom: [...customItems],
+      limit: LIMIT, sort: state.sort, favorites: [...favorites], custom: [...customItems], manual: manualPrices,
     })
     if (n === seq) list.value = r
   } catch { if (n === seq) error.value = 'Could not load the list.' }
