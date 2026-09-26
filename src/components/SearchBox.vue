@@ -35,7 +35,7 @@ function onKey(ev) {
 
 <template>
   <div class="search">
-    <input v-model="text" type="search" placeholder="Cerca oggetti, minerali, componenti…"
+    <input v-model="text" type="search" placeholder="Search items, minerals, components…"
       role="combobox" aria-expanded="open" aria-controls="sugg" autocomplete="off"
       @keydown="onKey" @blur="open = false" @focus="open = items.length > 0" />
     <ul v-if="open" id="sugg" role="listbox">

@@ -8,14 +8,14 @@ import SearchBox from './components/SearchBox.vue'
 import PriceModal from './components/PriceModal.vue'
 
 const LIMIT = 50
-const FILTERS = [['', 'Tutto'], ['item', 'Oggetti'], ['commodity', 'Commodity'], ['mineral', 'Minerali'], ['component', 'Componenti']]
-const SORTS = [['name', 'Nome'], ['buy', 'Prezzo acquisto ↑'], ['sell', 'Prezzo vendita ↓']]
+const FILTERS = [['', 'All'], ['item', 'Items'], ['commodity', 'Commodities'], ['mineral', 'Minerals'], ['component', 'Components']]
+const SORTS = [['name', 'Name'], ['buy', 'Buy price ↑'], ['sell', 'Sell price ↓']]
 const versions = ref([])
 const list = ref({ total: 0, items: [] })
 const loading = ref(false)
 const error = ref('')
 const pages = computed(() => Math.max(1, Math.ceil(list.value.total / LIMIT)))
-// Indice del primo non-preferito: serve solo per disegnare il divisore "Tutti gli oggetti"
+// Index of the first non-favorite item: only used to draw the "All items" divider
 const firstOtherIndex = computed(() => list.value.items.findIndex(e => !favorites.has(e.id)))
 let seq = 0
 
@@ -34,34 +34,34 @@ async function load() {
       limit: LIMIT, sort: state.sort, favorites: [...favorites],
     })
     if (n === seq) list.value = r
-  } catch { if (n === seq) error.value = "Impossibile caricare l'elenco." }
+  } catch { if (n === seq) error.value = 'Could not load the list.' }
   finally { if (n === seq) loading.value = false }
 }
 
-// Ricarica l'elenco quando cambia versione, filtro, ricerca, pagina o ordinamento
+// Reload the list when version, filter, search, page or sort changes
 watch(() => [state.version, state.type, state.q, state.page, state.sort], load, { immediate: true })
 
 const setType = t => { state.type = t; state.page = 1 }
 const onSearch = q => { state.q = q; state.page = 1 }
-const onHeart = id => { toggleFavorite(id); state.page = 1; load() } // l'ordine cambia, si riparte da pagina 1
+const onHeart = id => { toggleFavorite(id); state.page = 1; load() } // order changes, so back to page 1
 </script>
 
 <template>
   <header class="top">
-    <h1>Listino</h1>
+    <h1>SC Fast Market Browser</h1>
     <SearchBox :version="state.version" :model-value="state.q" @search="onSearch" @pick="e => (state.sel = e.id)" />
-    <label class="ver">Versione
+    <label class="ver">Version
       <select v-model="state.version" @change="state.page = 1">
         <option v-for="v in versions" :key="v.id" :value="v.id">{{ v.label }}</option>
       </select>
     </label>
   </header>
 
-  <nav class="filters" aria-label="Categoria e ordinamento">
+  <nav class="filters" aria-label="Category and sorting">
     <div class="filters-group">
       <button v-for="[t, label] in FILTERS" :key="t" :class="{ on: state.type === t }" @click="setType(t)">{{ label }}</button>
     </div>
-    <label class="sort">Ordina
+    <label class="sort">Sort by
       <select v-model="state.sort" @change="state.page = 1">
         <option v-for="[s, label] in SORTS" :key="s" :value="s">{{ label }}</option>
       </select>
@@ -70,13 +70,13 @@ const onHeart = id => { toggleFavorite(id); state.page = 1; load() } // l'ordine
 
   <main :aria-busy="loading">
     <p v-if="error" class="err">{{ error }}</p>
-    <p v-else-if="!loading && !list.items.length" class="empty">Nessun risultato. Cambia filtro, ricerca o versione.</p>
+    <p v-else-if="!loading && !list.items.length" class="empty">No results. Try a different filter, search or version.</p>
     <ul v-else class="list">
       <template v-for="(e, i) in list.items" :key="e.id">
-        <li v-if="i === firstOtherIndex && i > 0" class="divider">Tutti gli oggetti</li>
+        <li v-if="i === firstOtherIndex && i > 0" class="divider">All items</li>
         <li>
           <button class="heart" :class="{ on: favorites.has(e.id) }" :aria-pressed="favorites.has(e.id)"
-            title="Preferito" @click="onHeart(e.id)">♥</button>
+            title="Favorite" @click="onHeart(e.id)">♥</button>
           <button class="entry" @click="state.sel = e.id">
             <span class="name">{{ e.name }}</span>
             <small>{{ TYPE_LABEL[e.type] }}</small>
@@ -89,11 +89,19 @@ const onHeart = id => { toggleFavorite(id); state.page = 1; load() } // l'ordine
       </template>
     </ul>
     <div v-if="pages > 1" class="pager">
-      <button :disabled="state.page <= 1" @click="state.page--">Precedente</button>
-      <span>Pagina {{ state.page }} di {{ pages }}</span>
-      <button :disabled="state.page >= pages" @click="state.page++">Successiva</button>
+      <button :disabled="state.page <= 1" @click="state.page--">Previous</button>
+      <span>Page {{ state.page }} of {{ pages }}</span>
+      <button :disabled="state.page >= pages" @click="state.page++">Next</button>
     </div>
   </main>
 
   <PriceModal v-if="state.sel" :id="state.sel" :version="state.version" @close="state.sel = ''" />
+
+  <footer class="site-footer">
+    <span class="author">by RadWarrior</span>
+    <a class="uex-badge" href="https://uexcorp.space" target="_blank" rel="noopener">
+      <img src="/uex-logo.png" alt="UEX" @error="$event.target.style.display = 'none'" />
+      <span>Powered by UEX</span>
+    </a>
+  </footer>
 </template>

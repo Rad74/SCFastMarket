@@ -9,7 +9,7 @@ async function loadVersion(version) {
   if (cache.has(version)) return cache.get(version)
   const [entries, prices] = await Promise.all([
     fetch(`/data/${version}/entries.json`).then(r => {
-      if (!r.ok) throw new Error(`Versione non trovata: ${version}`)
+      if (!r.ok) throw new Error(`Version not found: ${version}`)
       return r.json()
     }),
     fetch(`/data/${version}/prices.json`).then(r => (r.ok ? r.json() : {})),

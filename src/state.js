@@ -1,6 +1,6 @@
 import { reactive, watch } from 'vue'
 
-export const TYPE_LABEL = { item: 'Oggetto', commodity: 'Commodity', mineral: 'Minerale', component: 'Componente' }
+export const TYPE_LABEL = { item: 'Item', commodity: 'Commodity', mineral: 'Mineral', component: 'Component' }
 
 // Stato globale, sincronizzato con la query string (?version=&type=&q=&page=&sel=)
 const p = new URLSearchParams(location.search)
