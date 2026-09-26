@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { api } from '../api'
 import { TYPE_LABEL } from '../state'
+import { customItems } from '../custom-items'
 
 const props = defineProps({ version: String, modelValue: String })
 const emit = defineEmits(['search', 'pick'])
@@ -15,7 +16,7 @@ watch(text, v => {
   clearTimeout(timer); idx.value = -1
   if (v.trim().length < 2) { items.value = []; open.value = false; return }
   timer = setTimeout(async () => {
-    const r = await api.suggest({ version: props.version, q: v.trim() })
+    const r = await api.suggest({ version: props.version, q: v.trim(), custom: [...customItems] })
     if (v === text.value) { items.value = r; open.value = r.length > 0 }
   }, 200)
 })

@@ -15,3 +15,13 @@ export function orderWithFavorites(items, sort, favoriteIds = []) {
   const rest = sortEntries(items.filter(e => !favs.has(e.id)), sort)
   return [...fav, ...rest]
 }
+
+// Riassume un prodotto (proprio o personalizzato) nei due numeri mostrati in card
+export function summarize(item) {
+  const buy = item.buy || [], sell = item.sell || []
+  return {
+    id: item.id, name: item.name, type: item.type,
+    minBuy: buy.length ? Math.min(...buy.map(r => r.price)) : null,
+    maxSell: sell.length ? Math.max(...sell.map(r => r.price)) : null,
+  }
+}

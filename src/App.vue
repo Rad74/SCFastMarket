@@ -3,9 +3,11 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { state, TYPE_LABEL } from './state'
 import { api } from './api'
 import { favorites, toggleFavorite } from './favorites'
+import { customItems, addCustomItem, isCustom } from './custom-items'
 import { fmt } from './list-utils.js'
 import SearchBox from './components/SearchBox.vue'
 import PriceModal from './components/PriceModal.vue'
+import AddProductModal from './components/AddProductModal.vue'
 
 const LIMIT = 50
 const FILTERS = [['', 'All'], ['item', 'Items'], ['commodity', 'Commodities'], ['mineral', 'Minerals'], ['component', 'Components']]
@@ -14,6 +16,7 @@ const versions = ref([])
 const list = ref({ total: 0, items: [] })
 const loading = ref(false)
 const error = ref('')
+const showAdd = ref(false)
 const pages = computed(() => Math.max(1, Math.ceil(list.value.total / LIMIT)))
 // Index of the first non-favorite item: only used to draw the "All items" divider
 const firstOtherIndex = computed(() => list.value.items.findIndex(e => !favorites.has(e.id)))
@@ -31,7 +34,7 @@ async function load() {
   try {
     const r = await api.entries({
       version: state.version, type: state.type, q: state.q, page: state.page,
-      limit: LIMIT, sort: state.sort, favorites: [...favorites],
+      limit: LIMIT, sort: state.sort, favorites: [...favorites], custom: [...customItems],
     })
     if (n === seq) list.value = r
   } catch { if (n === seq) error.value = 'Could not load the list.' }
@@ -44,6 +47,11 @@ watch(() => [state.version, state.type, state.q, state.page, state.sort], load, 
 const setType = t => { state.type = t; state.page = 1 }
 const onSearch = q => { state.q = q; state.page = 1 }
 const onHeart = id => { toggleFavorite(id); state.page = 1; load() } // order changes, so back to page 1
+function onAddProduct({ name, type }) {
+  const id = addCustomItem({ name, type })
+  showAdd.value = false
+  state.sel = id // open the detail popup right away, to add prices
+}
 </script>
 
 <template>
@@ -61,6 +69,7 @@ const onHeart = id => { toggleFavorite(id); state.page = 1; load() } // order ch
     <div class="filters-group">
       <button v-for="[t, label] in FILTERS" :key="t" :class="{ on: state.type === t }" @click="setType(t)">{{ label }}</button>
     </div>
+    <button class="add-btn" @click="showAdd = true">+ Add product</button>
     <label class="sort">Sort by
       <select v-model="state.sort" @change="state.page = 1">
         <option v-for="[s, label] in SORTS" :key="s" :value="s">{{ label }}</option>
@@ -80,6 +89,7 @@ const onHeart = id => { toggleFavorite(id); state.page = 1; load() } // order ch
           <button class="entry" @click="state.sel = e.id">
             <span class="name">{{ e.name }}</span>
             <small>{{ TYPE_LABEL[e.type] }}</small>
+            <span v-if="isCustom(e.id)" class="badge-custom">Custom</span>
             <span class="prices" v-if="e.minBuy != null || e.maxSell != null">
               <span v-if="e.minBuy != null" class="buy">Buy {{ fmt(e.minBuy) }}</span>
               <span v-if="e.maxSell != null" class="sell">Sell {{ fmt(e.maxSell) }}</span>
@@ -95,7 +105,8 @@ const onHeart = id => { toggleFavorite(id); state.page = 1; load() } // order ch
     </div>
   </main>
 
-  <PriceModal v-if="state.sel" :id="state.sel" :version="state.version" @close="state.sel = ''" />
+  <PriceModal v-if="state.sel" :id="state.sel" :version="state.version" @close="() => { state.sel = ''; load() }" />
+  <AddProductModal v-if="showAdd" @close="showAdd = false" @submit="onAddProduct" />
 
   <footer class="site-footer">
     <span class="author">by RadWarrior</span>

@@ -1,5 +1,5 @@
 // Dati finti per sviluppare il frontend senza backend
-import { orderWithFavorites } from './list-utils.js'
+import { orderWithFavorites, summarize } from './list-utils.js'
 
 const V = [{ id: 'LIVE-4.3', label: 'LIVE 4.3' }, { id: 'PTU-4.4', label: 'PTU 4.4' }]
 const E = [
@@ -28,15 +28,21 @@ function priceRows(id, version) {
 
 export const mock = {
   versions: () => wait(V),
-  async entries({ type, q, page = 1, limit = 50, sort = 'name', favorites = [], version }) {
-    const withPrices = match({ type, q }).map(e => {
+  async entries({ type = '', q = '', page = 1, limit = 50, sort = 'name', favorites = [], custom = [], version }) {
+    const remote = match({ type, q }).map(e => {
       const { buy, sell } = priceRows(e.id, version)
       return { ...e, minBuy: buy[0]?.price ?? null, maxSell: sell[0]?.price ?? null }
     })
-    const ordered = orderWithFavorites(withPrices, sort, favorites)
+    const own = custom
+      .filter(e => (!type || e.type === type) && e.name.toLowerCase().includes(q.toLowerCase()))
+      .map(summarize)
+    const ordered = orderWithFavorites([...own, ...remote], sort, favorites)
     const start = (page - 1) * limit
     return wait({ total: ordered.length, items: ordered.slice(start, start + limit) })
   },
-  suggest: p => wait(match({ q: p.q }).slice(0, 8)),
+  suggest: ({ q = '', custom = [] }) => {
+    const own = custom.filter(e => e.name.toLowerCase().includes(q.toLowerCase()))
+    return wait([...own, ...match({ q })].slice(0, 8))
+  },
   prices: async (id, { version }) => wait({ entry: E.find(e => e.id === id), ...priceRows(id, version) }),
 }
