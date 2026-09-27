@@ -25,3 +25,11 @@ export function summarize(item) {
     maxSell: sell.length ? Math.max(...sell.map(r => r.price)) : null,
   }
 }
+
+// Toglie dalle righe manuali quelle già identiche (stessa località e prezzo) tra quelle reali.
+// Serve per quando una tua riga viene in seguito "promossa" nel dataset ufficiale: a quel punto
+// coincide con una riga reale, e senza questo filtro la vedresti comparire due volte.
+export function withoutDuplicates(remoteRows, manualRows) {
+  const seen = new Set(remoteRows.map(r => `${r.location}|${r.price}`))
+  return manualRows.filter(r => !seen.has(`${r.location}|${r.price}`))
+}

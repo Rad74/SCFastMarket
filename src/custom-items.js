@@ -35,3 +35,14 @@ export function removeCustomPrice(id, kind, index) {
   item[kind].splice(index, 1)
   save()
 }
+
+// Da un file esportato con "My local data" (vedi export-import.js): aggiunge solo ciò che manca
+export function importCustomItems(items = []) {
+  for (const item of items) if (!customItems.some(c => c.id === item.id)) customItems.push(item)
+  save()
+}
+
+export function clearCustomItems() {
+  customItems.splice(0, customItems.length)
+  save()
+}

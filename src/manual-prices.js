@@ -24,3 +24,19 @@ export function removeManualPrice(id, kind, index) {
   item[kind].splice(index, 1)
   save()
 }
+
+// Da un file esportato con "My local data": aggiunge le righe (non deduplica, ci pensa
+// withoutDuplicates in list-utils.js al momento della visualizzazione)
+export function importManualPrices(map = {}) {
+  for (const [id, rows] of Object.entries(map)) {
+    const item = ensure(id)
+    item.buy.push(...(rows.buy || []))
+    item.sell.push(...(rows.sell || []))
+  }
+  save()
+}
+
+export function clearManualPrices() {
+  for (const k of Object.keys(manualPrices)) delete manualPrices[k]
+  save()
+}

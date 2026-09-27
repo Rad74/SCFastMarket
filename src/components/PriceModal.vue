@@ -4,6 +4,7 @@ import { api } from '../api'
 import { TYPE_LABEL } from '../state'
 import { isCustom, customItems, addCustomPrice, removeCustomPrice, removeCustomItem } from '../custom-items'
 import { manualPrices, addManualPrice, removeManualPrice } from '../manual-prices'
+import { withoutDuplicates } from '../list-utils.js'
 
 const props = defineProps({ id: String, version: String })
 const emit = defineEmits(['close'])
@@ -24,7 +25,7 @@ onMounted(() => dlg.value.showModal())
 
 // Marca ogni riga con manual:true/false e mIdx (la sua posizione nell'array "manuale" di origine),
 // così sappiamo sempre quale riga rimuovere, a prescindere dall'ordine con cui viene mostrata.
-const tagManual = (rows, mIdx0 = 0) => rows.map((r, i) => ({ ...r, manual: true, mIdx: i }))
+const tagManual = rows => rows.map((r, i) => ({ ...r, manual: true, mIdx: i }))
 const tagRemote = rows => rows.map(r => ({ ...r, manual: false }))
 
 async function load() {
@@ -40,8 +41,10 @@ async function load() {
   try {
     const remote = await api.prices(props.id, { version: props.version })
     const manual = manualPrices[props.id] || { buy: [], sell: [] }
-    const buy = [...tagRemote(remote.buy), ...tagManual(manual.buy)].sort((a, b) => a.price - b.price)
-    const sell = [...tagRemote(remote.sell), ...tagManual(manual.sell)].sort((a, b) => b.price - a.price)
+    const manualBuy = withoutDuplicates(remote.buy, tagManual(manual.buy))
+    const manualSell = withoutDuplicates(remote.sell, tagManual(manual.sell))
+    const buy = [...tagRemote(remote.buy), ...manualBuy].sort((a, b) => a.price - b.price)
+    const sell = [...tagRemote(remote.sell), ...manualSell].sort((a, b) => b.price - a.price)
     data.value = { entry: remote.entry, buy, sell }
   } catch { error.value = 'Could not load prices. Please try again shortly.' }
 }

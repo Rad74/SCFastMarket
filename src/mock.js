@@ -1,5 +1,5 @@
 // Dati finti per sviluppare il frontend senza backend
-import { orderWithFavorites, summarize } from './list-utils.js'
+import { orderWithFavorites, summarize, withoutDuplicates } from './list-utils.js'
 
 const V = [{ id: 'LIVE-4.3', label: 'LIVE 4.3' }, { id: 'PTU-4.4', label: 'PTU 4.4' }]
 const E = [
@@ -32,8 +32,8 @@ export const mock = {
     const remote = match({ type, q }).map(e => {
       const { buy, sell } = priceRows(e.id, version)
       const m = manual[e.id]
-      const allBuy = m ? [...buy, ...(m.buy || [])] : buy
-      const allSell = m ? [...sell, ...(m.sell || [])] : sell
+      const allBuy = m ? [...buy, ...withoutDuplicates(buy, m.buy || [])] : buy
+      const allSell = m ? [...sell, ...withoutDuplicates(sell, m.sell || [])] : sell
       return summarize({ id: e.id, name: e.name, type: e.type, buy: allBuy, sell: allSell })
     })
     const own = custom

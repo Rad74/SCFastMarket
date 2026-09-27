@@ -9,6 +9,7 @@ import { fmt } from './list-utils.js'
 import SearchBox from './components/SearchBox.vue'
 import PriceModal from './components/PriceModal.vue'
 import AddProductModal from './components/AddProductModal.vue'
+import DataPanel from './components/DataPanel.vue'
 
 const LIMIT = 50
 const FILTERS = [['', 'All'], ['item', 'Items'], ['commodity', 'Commodities'], ['mineral', 'Minerals'], ['component', 'Components']]
@@ -18,6 +19,9 @@ const list = ref({ total: 0, items: [] })
 const loading = ref(false)
 const error = ref('')
 const showAdd = ref(false)
+const showData = ref(false)
+const localCount = computed(() => customItems.length +
+  Object.values(manualPrices).reduce((n, p) => n + (p.buy?.length || 0) + (p.sell?.length || 0), 0))
 const pages = computed(() => Math.max(1, Math.ceil(list.value.total / LIMIT)))
 // Index of the first non-favorite item: only used to draw the "All items" divider
 const firstOtherIndex = computed(() => list.value.items.findIndex(e => !favorites.has(e.id)))
@@ -108,9 +112,13 @@ function onAddProduct({ name, type }) {
 
   <PriceModal v-if="state.sel" :id="state.sel" :version="state.version" @close="() => { state.sel = ''; load() }" />
   <AddProductModal v-if="showAdd" @close="showAdd = false" @submit="onAddProduct" />
+  <DataPanel v-if="showData" @close="() => { showData = false; load() }" />
 
   <footer class="site-footer">
     <span class="author">by RadWarrior</span>
+    <button v-if="localCount > 0" class="local-data-btn" @click="showData = true">
+      {{ localCount }} local {{ localCount === 1 ? 'addition' : 'additions' }} · manage
+    </button>
     <a class="uex-badge" href="https://uexcorp.space" target="_blank" rel="noopener">
       <img src="/uex-logo.png" alt="UEX" @error="$event.target.style.display = 'none'" />
       <span>Powered by UEX</span>

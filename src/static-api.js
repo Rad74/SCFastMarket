@@ -1,7 +1,7 @@
 // Legge i file JSON generati da scripts/build_data.py, in public/data/.
 // Nessun server: filtri, ricerca, ordinamento e paginazione girano nel browser.
 // Il dataset è piccolo (migliaia di voci al massimo), quindi va bene.
-import { orderWithFavorites, summarize } from './list-utils.js'
+import { orderWithFavorites, summarize, withoutDuplicates } from './list-utils.js'
 
 const cache = new Map() // version -> { entries: [...], byId: Map, prices: {...} }
 
@@ -30,8 +30,8 @@ export const staticApi = {
       .map(e => {
         const base = prices[e.id] || { buy: [], sell: [] }
         const m = manual[e.id]
-        const buy = m ? [...base.buy, ...(m.buy || [])] : base.buy
-        const sell = m ? [...base.sell, ...(m.sell || [])] : base.sell
+        const buy = m ? [...base.buy, ...withoutDuplicates(base.buy, m.buy || [])] : base.buy
+        const sell = m ? [...base.sell, ...withoutDuplicates(base.sell, m.sell || [])] : base.sell
         return summarize({ id: e.id, name: e.name, type: e.type, buy, sell })
       })
     const own = custom
